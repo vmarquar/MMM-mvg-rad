@@ -1,0 +1,22 @@
+.MMM-mvg-rad .table {
+    border-spacing: 0px 0px;
+    border-collapse: separate;
+    text-align: center;
+	width: 240px;
+	}
+
+.MMM-mvg-rad .spacerRow {
+	padding-bottom: 5px;
+	}
+
+.MMM-mvg-rad .amountRow {
+	font-weight: normal;
+	color: white;
+	width: 100%;
+	text-align: left;
+	}
+
+#map {
+	height: 240px;
+	width: 240px;
+}
