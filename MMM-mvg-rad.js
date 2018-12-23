@@ -3,32 +3,41 @@ Module.register("MMM-mvg-rad", {
       MAX_ITEMS: 5,
       refresh_rate : 3*60*1000, //milliseconds
       stationName: "Pickelstr. 2, München",
-      center: [11.534383, 48.168992],
-      radius: 1000,
+      center: [11.53468800, 48.16904000],
+      radius: 200,
       bearingCorrection: 0, // 0 is north, you can enter a correction to adapt the direction arrows from your mirror's "point of view"
-      returnType: "return_geojson", // "return_table"
-      mapboxAPI: "",
+      returnType:"return_geojson", //"return_geojson", // "return_table"
+      mapboxAPI: "", 
+      mapboxStyle: 'mapbox://styles/mapbox/dark-v9',
+      text_color: "#FFFFFF"
     },
     start: function (){
+      
       this.bike_table_data = []
+      this._map = null
+      if(this.config.returnType == "return_table"){
+        this.renderTable = true
+      } else {
+        this.renderTable = false
+        this.map_element = this.createMapRow()
+      }
       const CONFIG = {}
       CONFIG.radius = this.config.radius
       CONFIG.center = this.config.center
       CONFIG.returnType = this.config.returnType
       this.sendSocketNotification("GET_BIKE_DATA", CONFIG)
-      this.updateDom()
-
+      //this.updateDom()
     },
     getStyles: function () {
       return ["MMM-mvg-rad.css",
         "font-awesome.css",
-        'https://api.tiles.mapbox.com/mapbox-gl-js/v0.49.0/mapbox-gl.css',
-        'https://api.tiles.mapbox.com/mapbox-gl-js/v0.49.0/mapbox-gl.js'
+        'https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css',
+        'https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js'
       ];
   },
     
     getDom: function() {
-
+      
       var wrapper = document.createElement("div");
       var header = document.createElement("header");
       if (this.config.stationName !== "nextbike") {
@@ -37,10 +46,6 @@ Module.register("MMM-mvg-rad", {
         header.innerHTML = this.config.stationName;
       }
       wrapper.appendChild(header);
-      // var subElement = document.createElement("p")
-      // subElement.innerHTML = this.bike_table_data
-      // subElement.id = "bike_table_data"
-      // wrapper.appendChild(subElement)
       var table = document.createElement("table");
 			table.classList.add("small", "table");
 			table.border='0';
@@ -48,14 +53,17 @@ Module.register("MMM-mvg-rad", {
 			table.appendChild(this.createAmountRow());
       table.appendChild(this.createSpacerRow());
       
-      if(this.config.renderTable){
+      // Table Version
+      if(this.renderTable){
         if (this.bike_table_data.length > 0){
 
+          // List all bikes (MAX ITEMS is larger than the number of bikes)
           if (this.config.MAX_ITEMS >= this.bike_table_data.length){
             for (let index = 0; index < this.bike_table_data.length; index++) {
               const bike_obj = this.bike_table_data[index];
               table.appendChild(this.createDataRow(bike_obj))
             }
+          // List only the neareast bikes until MAX ITEMS is reached
           } else {
             for (let index = 0; index < this.config.MAX_ITEMS; index++) {
               const bike_obj = this.bike_table_data[index];
@@ -65,36 +73,29 @@ Module.register("MMM-mvg-rad", {
         }
         wrapper.appendChild(table)
 
-      } else if (this.bike_table_data) {
+      // Map Version
+      } else if (!this.renderTable){
         console.log(this.bike_table_data)
-        var map_element = this.createMapRow(JSON.stringify(this.bike_table_data))
-        wrapper.appendChild(map_element)
+        wrapper.appendChild(this.map_element)
       }
       
       return wrapper
-      // Loading data notification
     },
     
-    // notificationReceived: function(notification, payload, sender) {
-    //   switch(notification) {
-    //     case "DOM_OBJECTS_CREATED":
-    //       var timer = setInterval(()=>{
-    //         this.sendSocketNotification("GET_BIKE_DATA", this.config.MAX_ITEMS)
-    //         this.updateDom()
-    //       }, this.config.refresh_rate)
-    //       break
-        
-    //   }
-    // },
-    
     socketNotificationReceived: function (notification, payload) {
-        switch (notification) {
-          case "BIKE_DATA_FETCHED":
-            this.bike_table_data = payload
-            this.updateDom()
-            break
-        }
-      },
+      switch (notification) {
+        case "BIKE_DATA_FETCHED":
+          // add geojson or table data to variable
+          this.bike_table_data = payload
+          
+          // add bikes to map
+          if (!this.renderTable){
+            this.addBikesToMap(this.bike_table_data)
+          }
+          this.updateDom()
+          break
+      }
+    },
     
     createSpacerRow: function () {
       var spacerRow = document.createElement("tr");
@@ -132,9 +133,6 @@ Module.register("MMM-mvg-rad", {
 
       // Bike icon
       var symbol = document.createElement("td");
-      //var bike_icon = document.createElement("img");
-      //bike_icon.src = "/Users/Valentin/Desktop/MagicMirror/modules/MMM-mvg-rad/static/bicycle-solid.svg"
-      //symbol.appendChild(bike_icon)
       symbol.setAttribute("width", "12px");
       symbol.className = "fa fa-bicycle";
       row.appendChild(symbol);
@@ -153,18 +151,7 @@ Module.register("MMM-mvg-rad", {
       bikeDist.innerHTML = String(Math.round(bike_obj.distance))+' m'
       row.appendChild(bikeDist);
 
-      // Distance to bike from center point
-      // TODO add a small north arrow indicating the right direction
-      // var bikeBearing = document.createElement("td");
-      // bikeBearing.className = "bikeNo";
-      // bikeBearing.setAttribute("width", "60px")
-      // bikeBearing.innerHTML = String(bike_obj.bearing.toFixed(2))
-      // row.appendChild(bikeBearing);
-
       var symbol_arrow = document.createElement("td");
-      //var bike_icon = document.createElement("img");
-      //bike_icon.src = "/Users/Valentin/Desktop/MagicMirror/modules/MMM-mvg-rad/static/bicycle-solid.svg"
-      //symbol_arrow.appendChild(bike_icon)
       symbol_arrow.setAttribute("width", "12px");
       symbol_arrow.className = "fa fa-location-arrow";
       var bearing_int = Math.round(bike_obj.bearing)
@@ -174,44 +161,136 @@ Module.register("MMM-mvg-rad", {
 
       return row;
     },
-    createMapRow: function (geojson) {
+    createMapRow: function () {
+      
       var map_elem = document.createElement("div")
       map_elem.id = "map"
       // wrapper.appendChild(map_elem)
       mapboxgl.accessToken = this.config.mapboxAPI
-      const map = new mapboxgl.Map({
+      this._map = new mapboxgl.Map({
         container: map_elem,
-        style: 'mapbox://styles/vmarquar/cjpvjy8c608002spanpruhmm2',
-        center: [11.534324, 48.169533],
-        zoom: 16.41
+        style: this.config.mapboxStyle,
+        center: this.config.center,
+        zoom: 14.00
       });
-
-      map.on('load', function() {
-        // map.loadImage('./assets/custom-marker.png', (error, image) => {
-        //     if (error) throw error;
-        //     this.map.addImage('customMarker', image);
-
-        // --- AOI Projekte ---
-        map.addSource('bikes', {
+      
+      
+      var _this = this
+      _this._map.on('style.load', function () {
+        _this._map.addSource('center_source', {
           type: 'geojson',
-          data: geojson
+          data: {"type": "Point","coordinates": _this.config.center}
         });
-        map.addLayer({
-          "id": 'bikes_id',
-          'type': 'fill',
-          'source': "bikes",
-          'paint': {
-            'fill-color': 'hsla(196, 74%, 65%, 0.3)',
-            'fill-outline-color': 'hsl(209, 92%, 57%)',
-          },
-          'layout': {
-            "visibility": 'visible'
+
+        _this._map.addLayer({
+          "id": "point",
+          "source": "center_source",
+          "type": "circle",
+          "paint": {
+            "circle-radius": 4,
+            "circle-color": "#007cbf"
           }
         });
-        // }
       })
-
+      
       return(map_elem)
+    },
+    addBikesToMap: function (geojson) {
+      var _this = this
+      
+      if (_this._map.getSource('bikes_source') == null) {
+
+        _this._map.on('load', function () {
+
+          console.log("GEOJSON IST:")
+          console.log(geojson)
+          _this._map.addSource('bikes_source', {
+            type: 'geojson',
+            cluster: true,
+            clusterMaxZoom: 16, // Max zoom to cluster points on
+            clusterRadius: 15, // Radius of each cluster when clustering points (defaults to 50)
+            data: geojson
+          });
+    
+        _this._map.addLayer({
+            id: "bikes-count",
+            type: "symbol",
+            source: "bikes_source",
+            filter: ["has", "point_count"],
+            layout: {
+                "icon-image": "bicycle-15",
+                "text-field": "{point_count_abbreviated}+",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-offset": [0.9, 0],
+                "text-anchor": "left",
+                "text-size":10,              
+                "text-allow-overlap": true,
+                "icon-allow-overlap": true,
+              },
+              "paint": {
+                "text-color":_this.config.text_color
+              }
+        });
+
+          _this._map.addLayer({
+            "id": "bikes",
+            "type": "symbol",
+            "source": "bikes_source",
+            "filter": ["!", ["has", "point_count"]],
+            "layout": {
+              "icon-image": "bicycle-15",
+              "text-field": "{bikeNumber}",
+              "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+              "text-offset": [0.9, 0],
+              "text-anchor": "left",
+              "text-size":11,
+              "text-allow-overlap": true,
+              "icon-allow-overlap": true,
+            },
+            "paint": {
+              "text-color":_this.config.text_color
+            }
+          });
+
+          // Original with overlap=true
+          // _this._map.addLayer({
+          //   "id": "bikes",
+          //   "type": "symbol",
+          //   "source": "bikes_source",
+          //   "layout": {
+          //     "icon-image": "bicycle-15",
+          //     "icon-allow-overlap": true,
+          //     "text-field": "{bikeNumber}",
+          //     "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+          //     "text-offset": [0, 0.6],
+          //     "text-anchor": "top",
+          //     "text-allow-overlap": true,
+          //     "text-size":12
+          //   }
+          // });
+
+          console.log("MMM-mvg-rad: ADDED GEOJSON SOURCE")
+          _this._map.resize()
+          var bounds = new mapboxgl.LngLatBounds()
+          geojson.features.forEach(function(feature) {
+              bounds.extend(feature.geometry.coordinates)
+          })
+          bounds.extend(_this.config.center)
+          _this._map.fitBounds(bounds, {padding:45})
+        })
+
+      } else if (_this._map.getSource('bikes_source') != null) {
+        _this._map.getSource("bikes_source").setData(geojson)
+        _this._map.resize();
+        var bounds = new mapboxgl.LngLatBounds()
+          geojson.features.forEach(function(feature) {
+              bounds.extend(feature.geometry.coordinates)
+          })
+          bounds.extend(_this.config.center)
+          _this._map.fitBounds(bounds, {padding:45})
+        console.log("MMM-mvg-rad: UPDATED GEOJSON SOURCE")
+      }
+
     }
 
-  })
+   })
