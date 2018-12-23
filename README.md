@@ -30,9 +30,9 @@ A working installation of [MagicMirror<sup>2</sup>](https://github.com/MichMich/
 
 ## Configuration
 Sample minimum configuration entry for your `~/MagicMirror/config/config.js`:
-
+```json
     ...
-    
+
 		{
 			module: "MMM-mvg-rad",
 			position: "bottom_left",
@@ -40,11 +40,12 @@ Sample minimum configuration entry for your `~/MagicMirror/config/config.js`:
 		}, // if this is your last module remove the comma!
     
     ...
-
+```
 
 Sample configuration entry for your `~/MagicMirror/config/config.js` with optional parameters:
-
+```json
     ...
+
     {
         module: "MMM-mvg-rad",
         position: "bottom_left",
@@ -61,8 +62,12 @@ Sample configuration entry for your `~/MagicMirror/config/config.js` with option
             text_color: "#FFFFFF"
         }
     }, // if this is your last module remove the comma!
+    
     ...
+```
 
+## Thanks to MMM-nextbike!
+This module's design is inspired by the [MMM-nextbike](https://github.com/yo-less/MMM-nextbike) module. Some code snippets are from there as well! Thank you for the prework!
 
 ## Licence
 MIT License
