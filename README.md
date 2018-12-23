@@ -5,8 +5,8 @@ It displays either a table with `bike number`, `distance to walk` and `direction
 
 ## Screenshots
 
-![Table View](screenshots/table_view.png)
-![Map View](screenshots/map_view.png)
+![Map and Table View](screenshots/both.jpg)
+
 
 ## Current version
 
