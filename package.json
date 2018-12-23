@@ -1,0 +1,34 @@
+{
+  "name": "mmm-mvg-rad",
+  "version": "0.0.1",
+  "description": "This is a Magic Mirror 2 Module (MMM), that displays all near rental bikes from the MVG Rad Api (Munich Transportation Services).",
+  "main": "MMM-mvg-rad.js",
+  "dependencies": {
+    "@turf/turf": "^5.1.6",
+    "package.json": "^2.0.1",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vmarquar/MMM-mvg-rad.git"
+  },
+  "keywords": [
+    "MMM",
+    "mvg-rad",
+    "Magic",
+    "Mirror",
+    "Magic",
+    "Mirror",
+    "Module"
+  ],
+  "author": "VM",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vmarquar/MMM-mvg-rad/issues"
+  },
+  "homepage": "https://github.com/vmarquar/MMM-mvg-rad#readme"
+}
