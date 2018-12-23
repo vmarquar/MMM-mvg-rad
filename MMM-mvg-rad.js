@@ -2,8 +2,8 @@ Module.register("MMM-mvg-rad", {
   defaults: {
     MAX_ITEMS: 5,
     refresh_rate: 3 * 60 * 1000, //milliseconds
-    stationName: "",
-    center: [11.53468800, 48.16904000],
+    stationName: "Hauptbahnhof München",
+    center: [11.559973, 48.140247],
     radius: 200,
     bearingCorrection: 0, // 0 is north, you can enter a correction to adapt the direction arrows from your mirror's "point of view"
     returnType: "return_geojson", //"return_geojson", // "return_table"

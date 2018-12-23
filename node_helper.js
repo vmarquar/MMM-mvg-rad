@@ -6,14 +6,10 @@ module.exports = NodeHelper.create({
     start: function () {},
     socketNotificationReceived: function (notification, payload) {
         switch (notification) {
-            case "DO_YOUR_JOB":
-                this.sendSocketNotification("I_DID", (this.countDown - payload))
-                break
             case "GET_BIKE_DATA":
                 (async () => {
                     var data = await this.fetchBikeData(payload)
                     this.sendSocketNotification("BIKE_DATA_FETCHED", data)
-
                 })()
                 break
 
