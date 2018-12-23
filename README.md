@@ -30,7 +30,7 @@ A working installation of [MagicMirror<sup>2</sup>](https://github.com/MichMich/
 
 ## Configuration
 Sample minimum configuration entry for your `~/MagicMirror/config/config.js`:
-```json
+```js
     ...
 
 		{
@@ -43,7 +43,7 @@ Sample minimum configuration entry for your `~/MagicMirror/config/config.js`:
 ```
 
 Sample configuration entry for your `~/MagicMirror/config/config.js` with optional parameters:
-```json
+```js
     ...
 
     {
